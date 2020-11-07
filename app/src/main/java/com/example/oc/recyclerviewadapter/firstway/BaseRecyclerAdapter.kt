@@ -7,18 +7,16 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.example.oc.recyclerviewadapter.BaseViewHolder
 
-abstract class BaseRecyclerAdapter<T>(viewHolderMap: Map<Class<T>, Class<out BaseViewHolder<T>>>) : RecyclerView.Adapter<BaseViewHolder<T>>() {
+abstract class BaseRecyclerAdapter<T>(vararg viewHolderData: ViewHolderData<T>) : RecyclerView.Adapter<BaseViewHolder<T>>() {
 
     private var mItems: MutableList<T> = mutableListOf()
-    private val supportedViewHolder = SparseArray<Class<out BaseViewHolder<T>>>()
+    private val supportedViewHolder = SparseArray<ViewHolderData<T>>()
     private val supportedViewType = HashMap<Class<T>, Int>()
 
     init {
-        var viewType = 0
-        viewHolderMap.forEach { (key, value) ->
-            supportedViewType[key] = viewType
-            supportedViewHolder.put(viewType, value)
-            viewType++
+        viewHolderData.iterator().forEach {
+            supportedViewType[it.itemClass] = it.viewType
+            supportedViewHolder.put(it.viewType, it)
         }
     }
 
@@ -28,7 +26,7 @@ abstract class BaseRecyclerAdapter<T>(viewHolderMap: Map<Class<T>, Class<out Bas
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseViewHolder<T> {
         val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
-        return supportedViewHolder[viewType]!!.getConstructor(View::class.java).newInstance(view)
+        return supportedViewHolder[viewType]!!.viewHolderClass.getConstructor(View::class.java).newInstance(view)
     }
 
     override fun onBindViewHolder(holder: BaseViewHolder<T>, position: Int) {
